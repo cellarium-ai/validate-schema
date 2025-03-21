@@ -51,16 +51,3 @@ class ExtendedGeneChecker(GeneChecker):
                 gene_type = gene[4]
 
                 self.gene_dict[gene_id] = (gene_label, gene_length, gene_type)
-
-
-# cache the gene checkers
-_gene_checkers = {}
-
-
-def get_gene_checker(species: SupportedOrganisms, gencode_version: int | None) -> ExtendedGeneChecker:
-    # Values will be instances of gencode.ExtendedGeneChecker,
-    # keys will be one of gencode.SupportedOrganisms
-    if species not in _gene_checkers:
-        logger.info(f"Creating gene checker for {species}")
-        _gene_checkers[species] = ExtendedGeneChecker(species=species, gencode_version=gencode_version)
-    return _gene_checkers[species]

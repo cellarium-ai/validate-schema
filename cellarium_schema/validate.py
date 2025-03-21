@@ -8,7 +8,7 @@ import dask
 from cellxgene_schema.validate import Validator
 from cellxgene_schema.gencode import get_organism_from_feature_id
 
-from .gencode import get_gene_checker
+from .gencode import ExtendedGeneChecker
 
 
 logger = logging.getLogger(__name__)
@@ -40,8 +40,11 @@ class ExtendedValidator(Validator):
                 f"make sure it is a valid ID."
             )
             return
+        
+        if organism not in self.gene_checkers:
+            self.gene_checkers[organism] = ExtendedGeneChecker(organism, gencode_version=self.gencode_version)
 
-        if not get_gene_checker(organism, gencode_version=self.gencode_version).is_valid_id(feature_id):
+        if not self.gene_checkers[organism].is_valid_id(feature_id):
             self.errors.append(f"'{feature_id}' is not a valid feature ID in '{df_name}'.")
 
         return
@@ -75,23 +78,26 @@ def validate(
         ignore_labels=ignore_labels,
     )
 
-    with dask.config.set({"scheduler": "threads"}):
-        validator.validate_adata(h5ad_path)
-        logger.info(f"Validation complete in {datetime.now() - start} with status is_valid={validator.is_valid}")
+    validator.validate_adata(h5ad_path)
+    logger.info(f"Validation complete in {datetime.now() - start} with status is_valid={validator.is_valid}")
 
-        # Stop if validation was unsuccessful
-        if not validator.is_valid:
-            return False, validator.errors, False
+    # Stop if validation was unsuccessful
+    if not validator.is_valid:
+        return False, validator.errors, validator.is_seurat_convertible
 
-        if add_labels_file:
-            label_start = datetime.now()
-            writer = AnnDataLabelAppender(validator.adata)
-            was_writing_successful = writer.write_labels(add_labels_file)
-            logger.info(
-                f"H5AD label writing complete in {datetime.now() - label_start}, was_writing_successful: "
-                f"{was_writing_successful}"
-            )
+    if add_labels_file:
+        label_start = datetime.now()
+        writer = AnnDataLabelAppender(validator)
+        writer.write_labels(add_labels_file)
+        logger.info(
+            f"H5AD label writing complete in {datetime.now() - label_start}, was_writing_successful: "
+            f"{writer.was_writing_successful}"
+        )
 
-            return (validator.is_valid and was_writing_successful, validator.errors + writer.errors, False)
+        return (
+            validator.is_valid and writer.was_writing_successful,
+            validator.errors + writer.errors,
+            validator.is_seurat_convertible,
+        )
 
-        return True, validator.errors, False
+    return True, validator.errors, validator.is_seurat_convertible
