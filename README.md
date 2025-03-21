@@ -23,3 +23,9 @@ But for human data you can additionally specify the gencode version (in [43, 44]
 ```bash
 cellarium-schema validate --gencode-version 43 test.h5ad
 ```
+
+Similar to the `cellxgene-schema` tool, you can add human-readable labels based on ontology terms using
+
+```bash
+cellarium-schema validate --gencode-version 43 --add-labels test_labeled.h5ad test.h5ad
+```
