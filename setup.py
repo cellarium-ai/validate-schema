@@ -16,7 +16,7 @@ setup(
     python_requires=">=3.10",
     packages=["cellarium_schema"],
     package_dir={"cellarium_schema": "cellarium_schema"},
-    package_data={"cellarium_schema": ["gencode_files/*.gz"]}
+    package_data={"cellarium_schema": ["gencode_files/*.gz"]},
     include_package_data=True,
     zip_safe=False,
     classifiers=[
