@@ -1,6 +1,7 @@
 import gzip
 import logging
 import os
+import warnings
 
 from cellxgene_schema.gencode import GeneChecker, SupportedOrganisms
 from cellxgene_schema.env import GENCODE_DIR as CZI_GENCODE_DIR
@@ -38,7 +39,7 @@ class ExtendedGeneChecker(GeneChecker):
                 raise ValueError(f"gencode_version must be in [43, 44]: got {self.gencode_version}")
         else:
             if self.gencode_version is not None:
-                raise UserWarning("gencode_version is ignored if species is not HOMO_SAPIENS")
+                warnings.warn("gencode_version is ignored if species is not HOMO_SAPIENS", UserWarning)
             file = self.GENE_FILES[species]
         logger.info(f"using file {file}")
 
